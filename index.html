@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hatnova Bilgi Yarışması</title>
+<meta name="description" content="Türkiye tarihi, coğrafyası, müziği, edebiyatı ve sporu üzerine haftalık bilgi yarışması. Haftanın birincisi @hatnova_web hesabında öne çıkarılır.">
+<style>
+:root{
+  --navy:#0f1f3d; --navy2:#16294f; --navy3:#1f3666;
+  --cream:#f6efe2; --cream2:#e9dfcc; --gold:#c9a24a; --gold2:#e2c178;
+  --ok:#3fa36b; --bad:#c8553d; --muted:#9fb0cc;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:radial-gradient(ellipse at top,var(--navy3),var(--navy) 60%);background-color:var(--navy);color:var(--cream);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:520px;padding:20px 16px 32px;flex:1;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+header svg{width:44px;height:44px;flex:none}
+.brand b{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:.5px;display:block}
+.brand span{font-size:10px;letter-spacing:3px;color:var(--gold)}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-family:var(--serif);font-size:30px;line-height:1.15;margin-bottom:10px}
+h1 em{color:var(--gold);font-style:normal}
+.lead{color:var(--cream2);line-height:1.5;margin-bottom:18px}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(201,162,74,.25);border-radius:16px;padding:16px;margin-bottom:16px}
+.rules{list-style:none;display:grid;gap:9px;font-size:14px;color:var(--cream2)}
+.rules li{display:flex;gap:10px;align-items:flex-start}
+.rules li::before{content:"★";color:var(--gold);flex:none}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+.inp{display:flex;align-items:center;background:var(--cream);border-radius:12px;padding:0 12px;margin-bottom:6px}
+.inp span{color:var(--navy);font-weight:700}
+.inp input{flex:1;border:0;background:transparent;font-size:17px;padding:14px 6px;color:var(--navy);outline:none;font-family:var(--sans)}
+.hint{font-size:12px;color:var(--muted);min-height:16px;margin-bottom:12px}
+.hint.err{color:#f0a08f}
+.btn{appearance:none;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;cursor:pointer;width:100%;font-family:var(--sans);transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:var(--navy)}
+.btn.ghost{background:transparent;color:var(--cream);border:1px solid rgba(246,239,226,.3);margin-top:10px}
+.week{font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.countdown{font-size:13px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* Quiz */
+.top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px}
+.chip{background:rgba(201,162,74,.15);color:var(--gold2);border-radius:99px;padding:5px 11px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.bar{height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-bottom:22px}
+.bar i{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left;transition:background .3s}
+.bar i.low{background:var(--bad)}
+.question{font-family:var(--serif);font-size:23px;line-height:1.3;margin-bottom:22px;min-height:90px}
+.answers{display:grid;gap:10px}
+.ans{appearance:none;text-align:left;border:1px solid rgba(246,239,226,.18);background:rgba(255,255,255,.06);color:var(--cream);border-radius:14px;padding:15px 16px;font-size:16px;cursor:pointer;font-family:var(--sans);display:flex;gap:12px;align-items:center;transition:background .2s,border-color .2s}
+.ans b{width:26px;height:26px;border-radius:50%;background:rgba(201,162,74,.2);color:var(--gold2);display:grid;place-items:center;font-size:13px;flex:none}
+.ans.ok{background:rgba(63,163,107,.25);border-color:var(--ok)}
+.ans.bad{background:rgba(200,85,61,.25);border-color:var(--bad)}
+.ans:disabled{cursor:default}
+.feedback{text-align:center;font-weight:700;margin-top:16px;min-height:24px;color:var(--gold2)}
+.scoreline{font-size:13px;color:var(--muted);text-align:right}
+
+/* Result */
+.big{font-family:var(--serif);font-size:68px;color:var(--gold);line-height:1;text-align:center;margin:8px 0 4px}
+.sub{text-align:center;color:var(--cream2);margin-bottom:18px}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;text-align:center;font-size:18px;letter-spacing:2px;color:var(--cream);background:rgba(0,0,0,.25);border-radius:10px;padding:10px;margin-top:8px}
+.steps{font-size:14px;line-height:1.55;color:var(--cream2)}
+.steps b{color:var(--gold2)}
+.practice-tag{display:inline-block;background:rgba(159,176,204,.2);color:var(--muted);border-radius:99px;padding:4px 10px;font-size:12px;margin-bottom:10px}
+footer{font-size:11px;color:var(--muted);text-align:center;padding:14px 16px 22px}
+footer a{color:var(--muted)}
+.check input{width:100%;border:0;border-radius:10px;padding:12px;margin-bottom:8px;font-size:15px}
+.check textarea{width:100%;border:0;border-radius:10px;padding:12px;margin:8px 0;font-size:14px;font-family:var(--sans)}
+.dm{font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.25);border-radius:10px;padding:10px;margin-top:10px;color:var(--cream2);-webkit-user-select:all;user-select:all}
+.board{width:100%;border-collapse:collapse;font-size:14px}
+.board th,.board td{padding:8px 4px;border-bottom:1px solid rgba(246,239,226,.12);text-align:left}
+.board th{color:var(--muted);font-weight:500;font-size:12px}
+.board tbody tr:first-child td{color:var(--gold2);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="1" y="1" width="62" height="62" rx="14" fill="none" stroke="#c9a24a" stroke-width="2"/>
+      <path d="M18 16v32M38 16v32M18 32h20" stroke="#f6efe2" stroke-width="5" stroke-linecap="round"/>
+      <path d="M48 12l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" fill="#c9a24a"/>
+    </svg>
+    <div class="brand"><b>Hatnova</b><span>WEB &amp; CONSULTING</span></div>
+  </header>
+
+  <!-- START -->
+  <section class="screen on" id="s-start">
+    <div class="week" id="weekLabel"></div>
+    <h1>Türkiye <em>Bilgi Yarışması</em></h1>
+    <p class="lead">Tarih, coğrafya, müzik, edebiyat ve spor. Haftanın en yüksek puanını alan kişi <b>@hatnova_web</b> hesabında öne çıkarılır.</p>
+    <div class="card" id="leaderBox" style="display:none;text-align:center"></div>
+    <div class="card">
+      <ul class="rules">
+        <li>12 soru, her soru için 15 saniye</li>
+        <li>Doğru cevap 100 puan + hız bonusu (en fazla 75)</li>
+        <li>Bu hafta herkes aynı soruları cevaplıyor</li>
+        <li>Haftada sadece ilk deneme sayılır, sonrası antrenman</li>
+        <li>Soru sırasında uygulamadan çıkarsan o soru yanlış sayılır</li>
+        <li>Haftanın lideri bu sayfada kullanıcı adı ve puanıyla gösterilir</li>
+      </ul>
+    </div>
+    <div id="startForm">
+      <label for="handle">Instagram kullanıcı adın</label>
+      <div class="inp"><span>@</span><input id="handle" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="kullanici_adi" maxlength="30"></div>
+      <div class="hint" id="hint">Kazanırsan seni bu adla etiketleyeceğiz.</div>
+      <button class="btn gold" id="btnStart">Yarışmaya başla</button>
+    </div>
+    <div id="playedBox" style="display:none">
+      <div class="card" style="text-align:center">
+        <div style="color:var(--muted);font-size:13px">Bu haftaki resmi puanın</div>
+        <div class="big" id="playedScore" style="font-size:52px"></div>
+        <div id="playedHandle" style="color:var(--cream2)"></div>
+      </div>
+      <button class="btn gold" id="btnShowResult">Sonucumu ve story görselimi göster</button>
+      <button class="btn ghost" id="btnPractice">Antrenman yap</button>
+    </div>
+    <div class="countdown" id="countdown"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="s-quiz">
+    <div class="top"><span id="qNum"></span><span class="chip" id="qCat"></span></div>
+    <div class="bar"><i id="timer"></i></div>
+    <div class="question" id="qText"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="scoreline">Puan: <b id="liveScore">0</b></div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="s-result">
+    <div id="resultTag"></div>
+    <div class="week" id="resultWeek"></div>
+    <div class="big" id="finalScore">0</div>
+    <div class="sub" id="finalSub"></div>
+    <div id="officialBox">
+      <div class="card">
+        <div class="steps">
+          <b>Haftanın birincisi olmak için:</b><br>
+          1. Aşağıdaki hazır mesajı kopyala ve <b>@hatnova_web</b>’e DM olarak gönder. Sadece bu mesajla gelen puanlar sayılır.<br>
+          2. Story görselini paylaş ve <b>@hatnova_web</b>’i etiketle.<br>
+          3. Hafta bitince en yüksek puan sahibi hesabımızda öne çıkarılır.
+        </div>
+        <div class="code" id="code"></div>
+        <div class="dm" id="dmText"></div>
+      </div>
+      <button class="btn gold" id="btnDM">Mesajı kopyala ve DM aç</button>
+      <button class="btn ghost" id="btnShare">Story görselini paylaş</button>
+    </div>
+    <button class="btn ghost" id="btnAgain">Antrenman yap</button>
+    <button class="btn ghost" id="btnHome">Ana sayfa</button>
+  </section>
+
+  <!-- CHECK (nur für Hatnova: #kontrol) -->
+  <section class="screen" id="s-check">
+    <h1>Admin <em>Panel</em></h1>
+    <div class="card check">
+      <input id="aToken" type="password" placeholder="GitHub Fine-grained Token" autocomplete="off">
+      <button class="btn gold" id="btnLoad">Übersicht laden</button>
+      <div id="board" style="margin-top:14px"></div>
+    </div>
+    <div class="card check">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">DMs einlesen: Instagram-Export (ZIP, JSON oder HTML) wählen und/oder DM-Texte einfügen. Alles ohne gültige Quiz-Zeile wird ignoriert.</div>
+      <input id="dmFiles" type="file" multiple accept=".zip,.json,.html,.txt" style="color:var(--cream);background:transparent;padding:6px 0">
+      <textarea id="dmPaste" rows="5" placeholder="DM-Texte hier einfügen…"></textarea>
+      <button class="btn gold" id="btnParse">Auswerten</button>
+      <div id="importOut" style="margin-top:14px"></div>
+      <button class="btn gold" id="btnSave" style="display:none;margin-top:10px">In CSV speichern</button>
+    </div>
+  </section>
+</div>
+<footer>Hatnova Web &amp; Consulting · <a id="legal" href="#" target="_blank" rel="noopener">Künye &amp; Gizlilik</a><br>Oyun sırasında kişisel veri kaydedilmez. Sadece DM ile gönderilen haftanın lideri burada gösterilir.</footer>
+
+<script>
+/* ====== EINSTELLUNGEN ====== */
+const CONFIG = {
+  igHandle: 'hatnova_web',
+  quizUrl: 'quiz.hattat-web.de',          // erscheint auf dem Story-Bild
+  legalUrl: 'https://hattat-web.de',       // Link zu Impressum/Datenschutz anpassen
+  secondsPerQuestion: 15,
+  quota: { 'Tarih':3, 'Coğrafya':3, 'Müzik':3, 'Edebiyat & Kültür':2, 'Spor':1 },
+  repo: 'DEIN-GITHUB-NAME/hatnova-quiz',          // öffentliches Repo der Quiz-Seite
+  dataRepo: 'DEIN-GITHUB-NAME/hatnova-quiz-daten', // PRIVATES Repo für die CSV (leer lassen = gleiches Repo)
+  branch: 'main',
+  dataFile: 'leaderboard.json',            // nur Wochenführer, öffentlich sichtbar
+  csvFile: 'ergebnisse.csv',               // alle eingelesenen Ergebnisse, privat
+  salt: 'hatnova-quiz-2026'                // für den Prüfcode
+};
+
+/* ====== FRAGEN (erste Antwort = richtig, wird gemischt) ====== */
+const Q = [
+// Tarih
+{c:'Tarih',q:'Türkiye Cumhuriyeti hangi yıl ilan edildi?',a:['1923','1920','1919','1924']},
+{c:'Tarih',q:'İstanbul’u 1453’te fetheden Osmanlı padişahı kimdir?',a:['Fatih Sultan Mehmet','Yavuz Sultan Selim','Kanuni Sultan Süleyman','II. Murad']},
+{c:'Tarih',q:'Anadolu’nun kapılarını Türklere açan Malazgirt Meydan Muharebesi hangi yıl yapıldı?',a:['1071','1176','1299','1453']},
+{c:'Tarih',q:'Türkiye Büyük Millet Meclisi hangi tarihte açıldı?',a:['23 Nisan 1920','29 Ekim 1923','19 Mayıs 1919','30 Ağustos 1922']},
+{c:'Tarih',q:'Mustafa Kemal 19 Mayıs 1919’da Kurtuluş Savaşı’nı başlatmak için hangi şehre çıktı?',a:['Samsun','Trabzon','Sinop','Erzurum']},
+{c:'Tarih',q:'Osmanlı Devleti’nin kurucusu kimdir?',a:['Osman Bey','Orhan Bey','Ertuğrul Gazi','Alparslan']},
+{c:'Tarih',q:'Latin harflerine dayanan yeni Türk alfabesi hangi yıl kabul edildi?',a:['1928','1923','1934','1925']},
+{c:'Tarih',q:'Türkiye’de kadınlara milletvekili seçme ve seçilme hakkı hangi yıl tanındı?',a:['1934','1930','1946','1950']},
+{c:'Tarih',q:'Türkiye’nin bağımsızlığını uluslararası alanda tescil eden barış antlaşması hangisidir?',a:['Lozan Antlaşması','Sevr Antlaşması','Mondros Mütarekesi','Mudanya Mütarekesi']},
+{c:'Tarih',q:'Çanakkale Deniz Zaferi hangi tarihte kazanıldı?',a:['18 Mart 1915','30 Ağustos 1922','9 Eylül 1922','23 Nisan 1920']},
+{c:'Tarih',q:'Kanuni Sultan Süleyman’ın babası olan padişah kimdir?',a:['Yavuz Sultan Selim','II. Bayezid','Fatih Sultan Mehmet','II. Selim']},
+{c:'Tarih',q:'Ankara hangi yıl Türkiye’nin başkenti oldu?',a:['1923','1920','1919','1938']},
+{c:'Tarih',q:'Osmanlı’da “Lale Devri” hangi padişahın dönemine denk gelir?',a:['III. Ahmed','IV. Murad','I. Mahmud','III. Selim']},
+{c:'Tarih',q:'Büyük Taarruz’un zaferle sonuçlandığı ve Zafer Bayramı olarak kutlanan gün hangisidir?',a:['30 Ağustos','29 Ekim','19 Mayıs','23 Nisan']},
+{c:'Tarih',q:'Dünyanın bilinen en eski tapınak alanlarından Göbeklitepe hangi ildedir?',a:['Şanlıurfa','Mardin','Gaziantep','Adıyaman']},
+// Coğrafya
+{c:'Coğrafya',q:'Türkiye’nin en yüksek dağı hangisidir?',a:['Ağrı Dağı','Erciyes Dağı','Süphan Dağı','Kaçkar Dağı']},
+{c:'Coğrafya',q:'Türkiye’nin en büyük gölü hangisidir?',a:['Van Gölü','Tuz Gölü','Beyşehir Gölü','Eğirdir Gölü']},
+{c:'Coğrafya',q:'Tamamı Türkiye sınırları içinde kalan en uzun nehir hangisidir?',a:['Kızılırmak','Sakarya','Yeşilırmak','Fırat']},
+{c:'Coğrafya',q:'Türkiye’de kaç il vardır?',a:['81','79','80','82']},
+{c:'Coğrafya',q:'Yüzölçümü en büyük ilimiz hangisidir?',a:['Konya','Ankara','Sivas','Erzurum']},
+{c:'Coğrafya',q:'Peribacalarıyla ünlü Göreme hangi ildedir?',a:['Nevşehir','Kayseri','Aksaray','Niğde']},
+{c:'Coğrafya',q:'Beyaz travertenleriyle ünlü Pamukkale hangi ildedir?',a:['Denizli','Muğla','Aydın','Isparta']},
+{c:'Coğrafya',q:'Türkiye kaç coğrafi bölgeye ayrılır?',a:['7','5','6','8']},
+{c:'Coğrafya',q:'İstanbul Boğazı hangi iki denizi birbirine bağlar?',a:['Karadeniz ile Marmara','Marmara ile Ege','Ege ile Akdeniz','Karadeniz ile Ege']},
+{c:'Coğrafya',q:'Çanakkale Boğazı hangi iki denizi birbirine bağlar?',a:['Marmara ile Ege','Karadeniz ile Marmara','Ege ile Akdeniz','Akdeniz ile Marmara']},
+{c:'Coğrafya',q:'Türkiye’de fındık en çok hangi bölgede yetiştirilir?',a:['Karadeniz','Ege','Marmara','Akdeniz']},
+{c:'Coğrafya',q:'Kayalara oyulmuş Sümela Manastırı hangi ildedir?',a:['Trabzon','Rize','Artvin','Giresun']},
+{c:'Coğrafya',q:'Dev taş heykelleriyle ünlü Nemrut Dağı hangi ildedir?',a:['Adıyaman','Malatya','Şanlıurfa','Van']},
+{c:'Coğrafya',q:'Türkiye’nin en doğusundaki il hangisidir?',a:['Iğdır','Kars','Van','Hakkari']},
+{c:'Coğrafya',q:'Türkiye’nin en batı ucu hangi ilin sınırları içindedir?',a:['Çanakkale','Edirne','İzmir','Kırklareli']},
+// Müzik
+{c:'Müzik',q:'Barış Manço’nun çocuklar için sunduğu efsane TV programının adı nedir?',a:['7’den 77’ye','Hayat Bilgisi','Çarkıfelek','Bizimkiler']},
+{c:'Müzik',q:'“Megastar” lakabıyla bilinen pop şarkıcısı kimdir?',a:['Tarkan','Mustafa Sandal','Kenan Doğulu','Serdar Ortaç']},
+{c:'Müzik',q:'“Minik Serçe” lakabıyla tanınan sanatçı kimdir?',a:['Sezen Aksu','Ajda Pekkan','Nilüfer','Sertab Erener']},
+{c:'Müzik',q:'Türk halk müziğinin temel telli çalgısı bağlamanın diğer adı nedir?',a:['Saz','Ud','Kanun','Kemençe']},
+{c:'Müzik',q:'“Bozkırın Tezenesi” olarak anılan halk ozanı kimdir?',a:['Neşet Ertaş','Aşık Veysel','Âşık Mahzuni Şerif','Pir Sultan Abdal']},
+{c:'Müzik',q:'Türkiye Eurovision Şarkı Yarışması’nı hangi yıl kazandı?',a:['2003','1997','2004','2010']},
+{c:'Müzik',q:'Türkiye’ye ilk Eurovision birinciliğini getiren sanatçı kimdir?',a:['Sertab Erener','Sezen Aksu','Ajda Pekkan','Hadise']},
+{c:'Müzik',q:'İstiklal Marşı’nın bugün kullanılan bestesi kime aittir?',a:['Osman Zeki Üngör','Itri','Hacı Arif Bey','Dede Efendi']},
+{c:'Müzik',q:'“Sanat Güneşi” lakabıyla bilinen sanatçı kimdir?',a:['Zeki Müren','Müzeyyen Senar','Bülent Ersoy','Emel Sayın']},
+{c:'Müzik',q:'Hayranlarının “İmparator” diye andığı sanatçı kimdir?',a:['İbrahim Tatlıses','Orhan Gencebay','Müslüm Gürses','Ferdi Tayfur']},
+{c:'Müzik',q:'Aşık Veysel hangi ilde doğmuştur?',a:['Sivas','Kırşehir','Yozgat','Tokat']},
+{c:'Müzik',q:'Ney hangi tür çalgıdır?',a:['Üflemeli','Telli','Vurmalı','Yaylı']},
+{c:'Müzik',q:'“Gülpembe” ve “Dağlar Dağlar” şarkılarıyla tanınan Anadolu rock öncüsü kimdir?',a:['Barış Manço','Cem Karaca','Erkin Koray','Fikret Kızılok']},
+{c:'Müzik',q:'Düğünlerde davulun ayrılmaz eşi olan çalgı hangisidir?',a:['Zurna','Ney','Kanun','Ud']},
+// Edebiyat & Kültür
+{c:'Edebiyat & Kültür',q:'Nobel Edebiyat Ödülü’nü kazanan ilk Türk yazar kimdir?',a:['Orhan Pamuk','Yaşar Kemal','Elif Şafak','Nâzım Hikmet']},
+{c:'Edebiyat & Kültür',q:'“İnce Memed” romanının yazarı kimdir?',a:['Yaşar Kemal','Orhan Kemal','Kemal Tahir','Sait Faik Abasıyanık']},
+{c:'Edebiyat & Kültür',q:'“Kürk Mantolu Madonna” kimin eseridir?',a:['Sabahattin Ali','Ahmet Hamdi Tanpınar','Oğuz Atay','Peyami Safa']},
+{c:'Edebiyat & Kültür',q:'“Çalıkuşu” romanının yazarı kimdir?',a:['Reşat Nuri Güntekin','Halide Edib Adıvar','Yakup Kadri Karaosmanoğlu','Ömer Seyfettin']},
+{c:'Edebiyat & Kültür',q:'İstiklal Marşı’nın şairi kimdir?',a:['Mehmet Akif Ersoy','Ziya Gökalp','Namık Kemal','Tevfik Fikret']},
+{c:'Edebiyat & Kültür',q:'Karagöz ile Hacivat hangi geleneksel sanatın karakterleridir?',a:['Gölge oyunu','Meddah','Orta oyunu','Kukla tiyatrosu']},
+{c:'Edebiyat & Kültür',q:'Su yüzeyine serpilen boyaların kâğıda aktarılmasıyla yapılan geleneksel sanat hangisidir?',a:['Ebru','Hat','Tezhip','Minyatür']},
+{c:'Edebiyat & Kültür',q:'Mevlana Müzesi hangi ildedir?',a:['Konya','Bursa','Kayseri','Karaman']},
+{c:'Edebiyat & Kültür',q:'Nasreddin Hoca’nın türbesi hangi ilçededir?',a:['Akşehir','Ilgın','Beypazarı','Safranbolu']},
+{c:'Edebiyat & Kültür',q:'“Memleketimden İnsan Manzaraları” adlı eserin şairi kimdir?',a:['Nâzım Hikmet','Orhan Veli Kanık','Cahit Sıtkı Tarancı','Attila İlhan']},
+{c:'Edebiyat & Kültür',q:'“Dede Korkut Hikâyeleri” hangi Türk boyunun yaşamını anlatır?',a:['Oğuzlar','Kıpçaklar','Uygurlar','Karluklar']},
+// Spor
+{c:'Spor',q:'A Milli Futbol Takımı 2002 Dünya Kupası’nı kaçıncı sırada tamamladı?',a:['Üçüncü','İkinci','Dördüncü','Çeyrek finalde elendi']},
+{c:'Spor',q:'Galatasaray UEFA Kupası’nı hangi yıl kazandı?',a:['2000','1999','2002','2004']},
+{c:'Spor',q:'“Cep Herkülü” Naim Süleymanoğlu hangi sporda olimpiyat şampiyonu oldu?',a:['Halter','Güreş','Boks','Judo']},
+{c:'Spor',q:'Kırkpınar Yağlı Güreşleri hangi ilde yapılır?',a:['Edirne','Kırklareli','Tekirdağ','Bursa']},
+{c:'Spor',q:'NBA’de forma giyen Hidayet Türkoğlu’nun lakabı nedir?',a:['Hedo','Memo','Hido','Turbo']},
+{c:'Spor',q:'Türkiye’nin ev sahipliği yaptığı 2010 FIBA Dünya Basketbol Şampiyonası’nda A Milli Takım kaçıncı oldu?',a:['İkinci','Birinci','Üçüncü','Dördüncü']},
+{c:'Spor',q:'“Filenin Sultanları” hangi milli takımın lakabıdır?',a:['Kadın Voleybol','Kadın Basketbol','Kadın Hentbol','Kadın Futbol']},
+{c:'Spor',q:'At üstünde oynanan geleneksel Türk sporu hangisidir?',a:['Cirit','Polo','Kökbörü','Binicilik']}
+];
+
+/* ====== HILFSFUNKTIONEN ====== */
+const $ = id => document.getElementById(id);
+function cyrb53(str, seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function shuffle(arr, rnd){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function berlinNow(){const p={};new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(new Date()).forEach(x=>p[x.type]=x.value);return {y:+p.year,m:+p.month,d:+p.day,h:+p.hour,mi:+p.minute};}
+function isoWeek(off=0){const b=berlinNow();const t=new Date(Date.UTC(b.y,b.m-1,b.d+off));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();const w=Math.ceil(((t-Date.UTC(y,0,1))/86400000+1)/7);return {y,w,key:y+'-W'+String(w).padStart(2,'0')};}
+function makeCode(handle, score, weekKey){const h=cyrb53(handle.toLowerCase()+'|'+score+'|'+weekKey+'|'+CONFIG.salt).toString(36).toUpperCase().padStart(6,'0').slice(-6);return 'HN'+weekKey.split('-W')[1]+'-'+h;}
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);}
+
+/* ====== FRAGENAUSWAHL ====== */
+function buildRound(official){
+  const wk=isoWeek();
+  const rnd = official ? mulberry32(cyrb53(wk.key+CONFIG.salt)) : Math.random;
+  let picked=[];
+  for(const [cat,n] of Object.entries(CONFIG.quota)){
+    picked = picked.concat(shuffle(Q.filter(x=>x.c===cat), rnd).slice(0,n));
+  }
+  return shuffle(picked, rnd).map(x=>{
+    const opts=shuffle(x.a.map((t,i)=>({t,ok:i===0})), rnd);
+    return {c:x.c,q:x.q,opts};
+  });
+}
+
+/* ====== STATE ====== */
+const WEEK=isoWeek(); const KEY='hnq-'+WEEK.key;
+let S=null; // {round,i,score,correct,official,handle,locked,start,raf}
+
+function initStart(){
+  $('weekLabel').textContent=WEEK.y+' · '+WEEK.w+'. hafta';
+  const played=store.get(KEY);
+  $('startForm').style.display=played?'none':'block';
+  $('playedBox').style.display=played?'block':'none';
+  if(played){$('playedScore').textContent=played.score;$('playedHandle').textContent='@'+played.handle;}
+  tickCountdown();
+}
+function tickCountdown(){
+  const b=berlinNow();const day=new Date(Date.UTC(b.y,b.m-1,b.d)).getUTCDay()||7;
+  const ms=Date.UTC(b.y,b.m-1,b.d+(8-day))-Date.UTC(b.y,b.m-1,b.d,b.h,b.mi);const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);
+  $('countdown').textContent='Bu haftanın turu bitmesine: '+(d?d+' gün ':'')+h+' sa '+m+' dk';
+}
+setInterval(tickCountdown,30000);
+
+function startGame(official, handle){
+  S={round:buildRound(official),i:0,score:0,correct:0,official,handle,locked:false};
+  show('s-quiz'); nextQ();
+}
+function nextQ(){
+  const item=S.round[S.i];S.locked=false;
+  $('qNum').textContent=(S.i+1)+' / '+S.round.length+(S.official?'':' · Antrenman');
+  $('qCat').textContent=item.c;$('qText').textContent=item.q;$('feedback').textContent='';$('liveScore').textContent=S.score;
+  const box=$('answers');box.innerHTML='';
+  item.opts.forEach((o,idx)=>{const b=document.createElement('button');b.className='ans';b.innerHTML='<b>'+'ABCD'[idx]+'</b><span></span>';b.querySelector('span').textContent=o.t;b.onclick=()=>answer(idx);box.appendChild(b);});
+  S.start=performance.now();cancelAnimationFrame(S.raf);loop();
+}
+function remaining(){return Math.max(0,CONFIG.secondsPerQuestion-(performance.now()-S.start)/1000);}
+function loop(){
+  const r=remaining();const bar=$('timer');bar.style.transform='scaleX('+(r/CONFIG.secondsPerQuestion)+')';bar.classList.toggle('low',r<5);
+  if(r<=0){answer(-1,'Süre doldu!');return;}
+  S.raf=requestAnimationFrame(loop);
+}
+function answer(idx,msg){
+  if(!S||S.locked)return;S.locked=true;cancelAnimationFrame(S.raf);
+  const item=S.round[S.i];const btns=[...$('answers').children];
+  btns.forEach((b,i)=>{b.disabled=true;if(item.opts[i].ok)b.classList.add('ok');});
+  if(idx>=0&&item.opts[idx].ok){const pts=100+Math.round(remaining()*5);S.score+=pts;S.correct++;$('feedback').textContent='Doğru! +'+pts;}
+  else{if(idx>=0)btns[idx].classList.add('bad');$('feedback').textContent=msg||'Yanlış';}
+  $('liveScore').textContent=S.score;
+  setTimeout(()=>{S.i++;S.i<S.round.length?nextQ():finish();},1300);
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S&&!S.locked&&$('s-quiz').classList.contains('on'))answer(-1,'Uygulamadan çıkıldı');});
+
+async function finish(){
+  let res={score:S.score,correct:S.correct,total:S.round.length,handle:S.handle,official:S.official,week:WEEK.key};
+  if(S.official){res.code=makeCode(res.handle,res.score,res.week);store.set(KEY,res);}
+  showResult(res);
+}
+let LAST=null;
+function showResult(res){
+  LAST=res;
+  $('resultTag').innerHTML=res.official?'':'<span class="practice-tag">Antrenman – puan yarışmaya sayılmaz</span>';
+  $('resultWeek').textContent=WEEK.y+' · '+WEEK.w+'. hafta';
+  $('finalScore').textContent=res.score;
+  $('finalSub').textContent=res.total+' sorudan '+res.correct+' doğru'+(res.official?' · @'+res.handle:'');
+  $('officialBox').style.display=res.official?'block':'none';
+  if(res.official){$('code').textContent=res.code;$('dmText').textContent=dmMessage(res);$('btnDM').textContent='Mesajı kopyala ve DM aç';}
+  show('s-result');
+}
+
+/* ====== STORY-BILD 1080x1920 ====== */
+function drawStory(res){
+  const c=document.createElement('canvas');c.width=1080;c.height=1920;const x=c.getContext('2d');
+  const g=x.createRadialGradient(540,300,100,540,900,1300);g.addColorStop(0,'#1f3666');g.addColorStop(1,'#0f1f3d');x.fillStyle=g;x.fillRect(0,0,1080,1920);
+  x.strokeStyle='rgba(201,162,74,.5)';x.lineWidth=4;x.strokeRect(50,50,980,1820);
+  // Logo
+  x.save();x.translate(540,260);x.strokeStyle='#f6efe2';x.lineWidth=22;x.lineCap='round';
+  x.beginPath();x.moveTo(-60,-80);x.lineTo(-60,80);x.moveTo(40,-80);x.lineTo(40,80);x.moveTo(-60,0);x.lineTo(40,0);x.stroke();
+  star(x,95,-90,30,'#c9a24a');x.restore();
+  x.textAlign='center';
+  x.fillStyle='#f6efe2';x.font='bold 64px Georgia, serif';x.fillText('Hatnova',540,440);
+  x.fillStyle='#c9a24a';x.font='28px system-ui, sans-serif';x.fillText('W E B   &   C O N S U L T I N G',540,490);
+  x.fillStyle='#c9a24a';x.font='bold 46px system-ui, sans-serif';x.fillText('TÜRKİYE BİLGİ YARIŞMASI',540,700);
+  x.fillStyle='#9fb0cc';x.font='36px system-ui, sans-serif';x.fillText(WEEK.y+' · '+WEEK.w+'. hafta',540,760);
+  x.fillStyle='#e2c178';x.font='bold 260px Georgia, serif';x.fillText(String(res.score),540,1060);
+  x.fillStyle='#f6efe2';x.font='44px system-ui, sans-serif';x.fillText('puan · '+res.total+' sorudan '+res.correct+' doğru',540,1140);
+  x.font='bold 56px system-ui, sans-serif';x.fillText('@'+res.handle,540,1260);
+  x.fillStyle='rgba(0,0,0,.3)';roundRect(x,290,1320,500,90,20);x.fill();
+  x.fillStyle='#f6efe2';x.font='bold 44px ui-monospace, Menlo, monospace';x.fillText(res.code,540,1382);
+  x.fillStyle='#c9a24a';x.font='bold 48px system-ui, sans-serif';x.fillText('Beni geçebilir misin?',540,1590);
+  x.fillStyle='#f6efe2';x.font='40px system-ui, sans-serif';x.fillText(CONFIG.quizUrl,540,1660);
+  x.fillStyle='#9fb0cc';x.font='36px system-ui, sans-serif';x.fillText('@'+CONFIG.igHandle,540,1730);
+  return c;
+}
+function star(x,cx,cy,r,col){x.fillStyle=col;x.beginPath();for(let i=0;i<10;i++){const rr=i%2?r*.45:r,a=Math.PI/5*i-Math.PI/2;x.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));}x.closePath();x.fill();}
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+async function shareStory(){
+  const canvas=drawStory(LAST);
+  const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+  const file=new File([blob],'hatnova-quiz-'+LAST.week+'.png',{type:'image/png'});
+  const text='Türkiye Bilgi Yarışması: '+LAST.score+' puan! @'+CONFIG.igHandle;
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});return;} }catch(e){ if(e.name==='AbortError')return; }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+}
+
+/* ====== EVENTS ====== */
+$('legal').href=CONFIG.legalUrl;
+$('btnStart').onclick=()=>{
+  const h=$('handle').value.trim().replace(/^@+/,'');
+  if(!/^[A-Za-z0-9._]{1,30}$/.test(h)){$('hint').textContent='Geçerli bir Instagram kullanıcı adı gir (harf, rakam, . ve _).';$('hint').classList.add('err');return;}
+  startGame(true,h);
+};
+$('handle').addEventListener('keydown',e=>{if(e.key==='Enter')$('btnStart').click();});
+$('btnPractice').onclick=$('btnAgain').onclick=()=>startGame(false,(store.get(KEY)||{}).handle||'');
+$('btnShowResult').onclick=()=>showResult(store.get(KEY));
+$('btnHome').onclick=()=>{initStart();show('s-start');};
+$('btnShare').onclick=shareStory;
+/* ====== ÖFFENTLICH: Wochenführer anzeigen ====== */
+async function loadLeader(){
+  try{
+    const r=await fetch(CONFIG.dataFile+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const d=await r.json();const cur=d[WEEK.key],prev=d[isoWeek(-7).key];
+    if(!cur&&!prev)return;
+    const box=$('leaderBox');box.innerHTML='';
+    const line=(label,e,big)=>{const el=document.createElement('div');el.style.cssText=big?'font-size:17px;margin:4px 0':'font-size:13px;color:var(--muted);margin-top:6px';el.textContent=label+' @'+e.handle+' · '+e.score+' puan';box.appendChild(el);};
+    if(cur)line('👑 Bu haftanın lideri:',cur,true);
+    if(prev)line('Geçen haftanın birincisi:',prev,false);
+    box.style.display='block';
+  }catch(e){}
+}
+
+/* ====== DM-Vorlage für Teilnehmer ====== */
+function dmMessage(res){
+  return 'Merhaba! Türkiye Bilgi Yarışması sonucum: '+res.score+' puan ('+res.total+' sorudan '+res.correct+' doğru).\n'+
+         'HNQ|'+res.week+'|'+res.handle+'|'+res.score+'|'+res.correct+'|'+res.code;
+}
+$('btnDM').onclick=async()=>{
+  let ok=false;
+  try{await navigator.clipboard.writeText(dmMessage(LAST));ok=true;}catch(e){}
+  if(!ok){$('btnDM').textContent='Mesajı yukarıdan elle kopyala';return;}
+  $('btnDM').textContent='Kopyalandı ✓ – Instagram açılıyor…';
+  setTimeout(()=>{location.href='https://ig.me/m/'+CONFIG.igHandle;},700);
+};
+
+/* ====== ADMIN: nur mit Fine-grained Token ====== */
+function token(){const t=$('aToken').value.trim();if(t)store.set('hnq-token',t);return t;}
+const b64e=s=>{let bin='';new TextEncoder().encode(s).forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const ghUrl=(repo,path)=>'https://api.github.com/repos/'+repo+'/contents/'+path;
+const DATA_REPO=()=>CONFIG.dataRepo||CONFIG.repo;
+async function ghGet(repo,path){
+  const r=await fetch(ghUrl(repo,path)+'?ref='+CONFIG.branch+'&t='+Date.now(),{headers:{Authorization:'Bearer '+token(),Accept:'application/vnd.github+json'},cache:'no-store'});
+  if(r.status===404)return {text:'',sha:null};
+  if(!r.ok)throw new Error('GitHub '+r.status+' bei '+repo+(r.status===401?' – Token ungültig':r.status===403?' – Token hat keine Rechte für dieses Repo':''));
+  const j=await r.json();return {text:b64d(j.content),sha:j.sha};
+}
+async function ghPut(repo,path,text,sha,msg){
+  const body={message:msg,content:b64e(text),branch:CONFIG.branch};if(sha)body.sha=sha;
+  const r=await fetch(ghUrl(repo,path),{method:'PUT',headers:{Authorization:'Bearer '+token(),Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error('GitHub '+r.status+' '+(j.message||''));}
+}
+const CSV_HEAD='woche,instagram,punkte,richtig,code,eingelesen';
+function parseCsv(t){return t.split(/\r?\n/).slice(1).filter(Boolean).map(l=>{const [week,handle,score,correct,code,time]=l.split(',');return {week,handle,score:+score,correct:+correct,code,time};});}
+const toCsv=rows=>CSV_HEAD+'\n'+rows.map(r=>[r.week,r.handle,r.score,r.correct,r.code,r.time].join(',')).join('\n')+(rows.length?'\n':'');
+function leaders(rows){const L={};rows.forEach(r=>{const c=L[r.week];if(!c||r.score>c.score)L[r.week]=r;});return L;} // Gleichstand: zuerst eingelesen bleibt
+async function loadData(){const csv=await ghGet(DATA_REPO(),CONFIG.csvFile);return {rows:parseCsv(csv.text),sha:csv.sha};}
+async function saveAll(rows,sha,msg){
+  await ghPut(DATA_REPO(),CONFIG.csvFile,toCsv(rows),sha,msg);
+  const L=leaders(rows),pub={};Object.keys(L).sort().forEach(w=>pub[w]={handle:L[w].handle,score:L[w].score});
+  const cur=await ghGet(CONFIG.repo,CONFIG.dataFile);const next=JSON.stringify(pub,null,2)+'\n';
+  if(cur.text!==next)await ghPut(CONFIG.repo,CONFIG.dataFile,next,cur.sha,msg);
+}
+function cells(tr,vals){vals.forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});}
+function renderBoard(rows){
+  const b=$('board');const L=leaders(rows);const weeks=Object.keys(L).sort().reverse();
+  if(!weeks.length){b.textContent='Noch keine Ergebnisse eingelesen.';return;}
+  b.innerHTML='<table class="board"><thead><tr><th>Woche</th><th>Gewinner</th><th>Punkte</th><th>Teiln.</th><th></th></tr></thead><tbody></tbody></table>';
+  const tb=b.querySelector('tbody');
+  weeks.forEach(wk=>{const e=L[wk];const tr=document.createElement('tr');
+    cells(tr,[wk.replace('-W',' · W'),'@'+e.handle,e.score+' ('+e.correct+'/12)',rows.filter(r=>r.week===wk).length]);
+    const td=document.createElement('td');const x=document.createElement('button');x.textContent='✕';x.title='Entfernen (z. B. bei Betrug) – der Nächstbeste rückt nach';
+    x.style.cssText='background:none;border:0;color:var(--muted);font-size:16px;cursor:pointer';
+    x.onclick=async()=>{if(!confirm('@'+e.handle+' aus '+wk+' entfernen? Der Nächstbeste rückt nach.'))return;
+      try{const d=await loadData();const rest=d.rows.filter(r=>!(r.week===wk&&r.handle===e.handle));await saveAll(rest,d.sha,'Quiz '+wk+': @'+e.handle+' entfernt');renderBoard(rest);}catch(err){alert('Fehler: '+err.message);}};
+    td.appendChild(x);tr.appendChild(td);tb.appendChild(tr);});
+}
+$('btnLoad').onclick=async()=>{const b=$('board');b.textContent='Lädt…';try{renderBoard((await loadData()).rows);}catch(e){b.textContent='Fehler: '+e.message;}};
+
+/* --- Instagram-Export (ZIP) ohne Zusatzbibliothek lesen --- */
+async function unzipTexts(buf){
+  const dv=new DataView(buf);let e=buf.byteLength-22;
+  while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;
+  if(e<0)throw new Error('Datei ist keine gültige ZIP');
+  const n=dv.getUint16(e+10,true);let off=dv.getUint32(e+16,true);const out=[];
+  for(let i=0;i<n;i++){
+    if(dv.getUint32(off,true)!==0x02014b50)break;
+    const method=dv.getUint16(off+10,true),size=dv.getUint32(off+20,true),nl=dv.getUint16(off+28,true),el=dv.getUint16(off+30,true),cl=dv.getUint16(off+32,true),lho=dv.getUint32(off+42,true);
+    const name=new TextDecoder().decode(new Uint8Array(buf,off+46,nl));off+=46+nl+el+cl;
+    if(!/\.(json|html?|txt)$/i.test(name))continue;
+    const data=new Uint8Array(buf,lho+30+dv.getUint16(lho+26,true)+dv.getUint16(lho+28,true),size);
+    let bytes=null;
+    if(method===0)bytes=data;
+    else if(method===8)bytes=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    if(bytes)out.push(new TextDecoder().decode(bytes));
+  }
+  return out;
+}
+const LINE=/HNQ\|(\d{4}-W\d{2})\|@?([A-Za-z0-9._]{1,30})\|(\d{1,4})\|(\d{1,2})\|(HN\d{2}-[A-Z0-9]{6})/g;
+let PENDING=null;
+$('btnParse').onclick=async()=>{
+  const out=$('importOut');out.textContent='Lese…';$('btnSave').style.display='none';
+  try{
+    const texts=[$('dmPaste').value];
+    for(const f of $('dmFiles').files){
+      if(/\.zip$/i.test(f.name))texts.push(...await unzipTexts(await f.arrayBuffer()));
+      else texts.push(await f.text());
+    }
+    const found=[],bad=new Set(),seen=new Set();
+    texts.forEach(t=>{for(const m of t.matchAll(LINE)){
+      const week=m[1],handle=m[2].toLowerCase(),score=+m[3],correct=+m[4],code=m[5];
+      const id=week+'|'+handle+'|'+score+'|'+code;if(seen.has(id))continue;seen.add(id);
+      const plausible=correct<=12&&score>=correct*100&&score<=correct*175;
+      if(!plausible||code!==makeCode(handle,score,week)){bad.add('@'+handle+' ('+score+')');continue;}
+      found.push({week,handle,score,correct,code});
+    }});
+    const d=await loadData();const have=new Set(d.rows.map(r=>r.week+'|'+r.handle));
+    const fresh=[];let dup=0;
+    found.forEach(r=>{const k=r.week+'|'+r.handle;if(have.has(k)){dup++;return;}have.add(k);fresh.push(r);});
+    const now=new Date().toISOString();fresh.forEach(r=>r.time=now);
+    PENDING={rows:d.rows,sha:d.sha,fresh};
+    out.innerHTML='';
+    const p=document.createElement('div');p.className='steps';
+    p.textContent=fresh.length+' neu · '+dup+' schon vorhanden · '+bad.size+' ungültig'+(found.length+bad.size===0?' · keine Quiz-Nachricht gefunden':'');
+    out.appendChild(p);
+    if(bad.size){const q=document.createElement('div');q.className='hint err';q.style.marginTop='6px';q.textContent='Manipuliert oder falsch: '+[...bad].join(', ');out.appendChild(q);}
+    if(fresh.length){
+      const t=document.createElement('table');t.className='board';t.style.marginTop='8px';
+      t.innerHTML='<thead><tr><th>Woche</th><th>Instagram</th><th>Punkte</th></tr></thead><tbody></tbody>';
+      fresh.slice().sort((a,b)=>b.score-a.score).forEach(r=>{const tr=document.createElement('tr');cells(tr,[r.week,'@'+r.handle,r.score+' ('+r.correct+'/12)']);t.querySelector('tbody').appendChild(tr);});
+      out.appendChild(t);$('btnSave').style.display='block';
+    }
+  }catch(e){out.textContent='Fehler: '+e.message;}
+};
+$('btnSave').onclick=async()=>{
+  if(!PENDING||!PENDING.fresh.length)return;const out=$('importOut');$('btnSave').disabled=true;
+  try{
+    const all=PENDING.rows.concat(PENDING.fresh);
+    await saveAll(all,PENDING.sha,'Quiz: '+PENDING.fresh.length+' Ergebnisse eingelesen');
+    out.textContent='✓ '+PENDING.fresh.length+' Ergebnisse gespeichert. Gewinner in ca. 1–2 Min. auf der Seite sichtbar.';
+    $('btnSave').style.display='none';$('dmPaste').value='';$('dmFiles').value='';PENDING=null;renderBoard(all);
+  }catch(e){out.textContent='Fehler: '+e.message+' – bitte erneut „Auswerten“.';}
+  finally{$('btnSave').disabled=false;}
+};
+
+initStart();
+loadLeader();
+if(location.hash==='#kontrol'){$('aToken').value=store.get('hnq-token')||'';show('s-check');}
+</script>
+</body>
+</html>
